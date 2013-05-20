@@ -1,0 +1,13 @@
+.DS_Store
+.idea
+.metadata
+.settings
+.classpath
+.project
+target
+build
+bin
+Thumbs.db
+*.pdb
+*.log
+*.log.*

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+    <!-- 启用对带有 Spring 注释的类进行自动扫描
+    在实践中，它将检查控制器类中所定义的 @Controller 注释 -->
+    <context:component-scan base-package="cn.dragon.restful.spring.controller"/>
+
+    <!-- To enable @RequestMapping process on type level and method level -->
+    <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
+    <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"/>
+
+    <!-- 定义使用 JAXB 2 进行对象 XML 映射（OXM）的编组器（marshaller）和解组器（unmarshaller) -->
+    <bean id="jaxbMarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <property name="classesToBeBound">
+            <list>
+                <value>cn.dragon.restful.spring.bean.Employee</value>
+                <value>cn.dragon.restful.spring.bean.EmployeeList</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 定义一个使用 Jaxb2Mashaller 的 XML 表示 view -->
+    <bean id="employees" class="org.springframework.web.servlet.view.xml.MarshallingView">
+        <constructor-arg ref="jaxbMarshaller"/>
+    </bean>
+
+    <!-- 使用用户指定的 bean 名称定义一个视图解析器,本例将使用名为 “employees” 的 MarshallingView
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.BeanNameViewResolver"/> -->
+
+    <!-- 定义内容协商:Spring 3 引入了一个名为 ContentNegotiatingViewResolver 的新视图解析器。
+    它可以根据请求的内容类型（请求头中的 Accept 属性）或 URI 后缀来切换视图解析器  -->
+    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <property name="mediaTypes">
+            <map>
+                <entry key="xml" value="application/xml"/>
+                <entry key="html" value="text/html"/>
+            </map>
+        </property>
+        <property name="viewResolvers">
+            <list>
+                <!-- 负责处理 application/xml  -->
+                <bean class="org.springframework.web.servlet.view.BeanNameViewResolver"/>
+
+                <!-- 负责处理 text/html -->
+                <bean id="viewResolver" class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+                    <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+                    <property name="prefix" value="/WEB-INF/jsp/"/>
+                    <property name="suffix" value=".jsp"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <!--bean id="viewResolver" class="org.springframework.web.servlet.view.BeanNameViewResolver" /-->
+    <bean id="employeeController" class="cn.dragon.restful.spring.controller.EmployeeController">
+        <property name="employeeDS" ref="employeeDS"/>
+        <property name="jaxb2Mashaller" ref="jaxbMarshaller"/>
+    </bean>
+</beans>
